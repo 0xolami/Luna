@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Luna</title>
+    <link rel="icon" type="image/png" href="./Luna.png" sizez="40x40">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./luna.css">
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <div class="app">
+
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar">
+            <div class="sb-brand">
+                <div class="sb-logo">Luna<span>.</span></div>
+                <div class="sb-tagline">Your health companion</div>
+            </div>
+            <nav class="sb-nav">
+                <button class="nav-item active" onclick="showView('cycle',this)">
+                    <span class="nav-icon">🌸</span> Cycle Tracker
+                </button>
+                <button class="nav-item" onclick="showView('vitals',this)">
+                    <span class="nav-icon">❤️</span> Health Vitals
+                </button>
+                <button class="nav-item" onclick="showView('wellness',this)">
+                    <span class="nav-icon">✨</span> Wellness Tips
+                </button>
+                <button class="nav-item" onclick="showView('meds',this)" id="med-nav">
+                    <span class="nav-icon">💊</span> Medications
+                </button>
+                <button class="nav-item" onclick="showView('notifs',this)" id="notif-nav">
+                    <span class="nav-icon">🔔</span> Notifications
+                    <span class="nav-badge" id="notif-badge" style="display:none">0</span>
+                </button>
+            </nav>
+            <div class="sb-bottom">
+                <div class="notif-toggle">
+                    <span>Reminders on</span>
+                    <button class="toggle-switch on" id="notif-master" onclick="toggleNotifs()">
+                        <div class="toggle-knob"></div>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN ═══ -->
+        <main class="main">
+
+            <!-- ────────── CYCLE VIEW ────────── -->
+            <div class="view active" id="view-cycle">
+                <div class="page-hd">
+                    <div>
+                        <div class="page-title">Cycle Tracker</div>
+                        <div class="page-sub" id="cycle-date-sub">Loading your cycle…</div>
+                    </div>
+                    <button class="btn btn-rose btn-sm" onclick="logPeriodStart()">+ Log Period</button>
+                </div>
+
+                <!-- Wheel + Phase -->
+                <div class="card">
+                    <div class="cycle-hero">
+                        <div class="wheel-wrap">
+                            <svg id="cycle-svg" viewBox="0 0 200 200"></svg>
+                            <div class="wheel-center">
+                                <div class="wheel-day" id="wheel-day">—</div>
+                                <div class="wheel-phase" id="wheel-phase-label">—</div>
+                            </div>
+                        </div>
+                        <div class="cycle-info">
+                            <div class="phase-name" id="phase-name">—</div>
+                            <div class="phase-desc" id="phase-desc">Set your last period date to get started.</div>
+                            <div class="cycle-stats">
+                                <div class="cstat">
+                                    <div class="cstat-val" id="stat-nextperiod">—</div>
+                                    <div class="cstat-label">Days to next period</div>
+                                </div>
+                                <div class="cstat">
+                                    <div class="cstat-val" id="stat-fertile">—</div>
+                                    <div class="cstat-label">Fertile window</div>
+                                </div>
+                                <div class="cstat">
+                                    <div class="cstat-val" id="stat-cycleday">—</div>
+                                    <div class="cstat-label">Cycle day</div>
+                                </div>
+                            </div>
+                            <div class="phase-legend">
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:#e8547a"></div>Period
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:#5ecfa3"></div>Fertile
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:#f0a84e"></div>Ovulation
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-dot" style="background:#b09abf"></div>Luteal
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Strip -->
+                <div class="card">
+                    <div class="card-title">This Month</div>
+                    <div class="cal-strip" id="cal-strip"></div>
+                </div>
+
+                <!-- Setup -->
+                <div class="card">
+                    <div class="card-title">Cycle Settings</div>
+                    <div class="setup-row">
+                        <div class="field">
+                            <label>Last period start</label>
+                            <input type="date" id="last-period" onchange="saveCycleSettings()">
+                        </div>
+                        <div class="field">
+                            <label>Cycle length (days)</label>
+                            <input type="number" id="cycle-length" value="28" min="20" max="45"
+                                onchange="saveCycleSettings()">
+                        </div>
+                        <div class="field">
+                            <label>Period duration (days)</label>
+                            <input type="number" id="period-duration" value="5" min="2" max="10"
+                                onchange="saveCycleSettings()">
+                        </div>
+                        <div class="field">
+                            <label>Luteal phase (days)</label>
+                            <input type="number" id="luteal-length" value="14" min="10" max="16"
+                                onchange="saveCycleSettings()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Symptom Log -->
+                <div class="card">
+                    <div class="card-title">Today's Symptoms</div>
+                    <div class="symptom-grid" id="symptom-grid"></div>
+                    <div class="sec-label">Mood</div>
+                    <div class="mood-row" id="mood-row"></div>
+                    <div class="sep"></div>
+                    <div class="field" style="margin-bottom:12px;">
+                        <label>Flow intensity</label>
+                        <select id="flow-intensity" onchange="saveSymptoms()">
+                            <option value="">No period today</option>
+                            <option value="light">Light</option>
+                            <option value="medium">Medium</option>
+                            <option value="heavy">Heavy</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-rose btn-sm" onclick="saveSymptoms()">Save Today's Log</button>
+                </div>
+            </div>
+
+            <!-- ────────── VITALS VIEW ────────── -->
+            <div class="view" id="view-vitals">
+                <div class="page-hd">
+                    <div>
+                        <div class="page-title">Health Vitals</div>
+                        <div class="page-sub">Log and monitor your body's key signals</div>
+                    </div>
+                </div>
+
+                <div class="vitals-grid" id="vitals-display"></div>
+
+                <div class="card">
+                    <div class="card-title">Log Vitals</div>
+                    <div class="vital-input-row">
+                        <div class="field">
+                            <label>Heart Rate (BPM)</label>
+                            <input type="number" id="v-hr" placeholder="e.g. 72" min="40" max="200">
+                        </div>
+                        <div class="field">
+                            <label>Blood Pressure</label>
+                            <input type="text" id="v-bp" placeholder="e.g. 120/80">
+                        </div>
+                        <div class="field">
+                            <label>Temperature (°C)</label>
+                            <input type="number" id="v-temp" placeholder="e.g. 36.6" step="0.1" min="35" max="42">
+                        </div>
+                        <div class="field">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="v-weight" placeholder="e.g. 60" step="0.1">
+                        </div>
+                        <div class="field">
+                            <label>Sleep (hours)</label>
+                            <input type="number" id="v-sleep" placeholder="e.g. 7.5" step="0.5" min="0" max="24">
+                        </div>
+                        <div class="field">
+                            <label>Water (glasses)</label>
+                            <input type="number" id="v-water" placeholder="e.g. 8" min="0" max="20">
+                        </div>
+                    </div>
+                    <button class="btn btn-rose" onclick="saveVitals()">Save Vitals</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">What Your Heart Rate Means</div>
+                    <div class="tip-grid">
+                        <div class="tip-card">
+                            <div class="tip-emoji">💚</div>
+                            <div class="tip-title">Normal (60–100 BPM)</div>
+                            <div class="tip-text">A resting heart rate of 60–100 BPM is considered healthy for adults.
+                                Athletes may naturally sit lower at 40–60 BPM.</div>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-emoji">⚠️</div>
+                            <div class="tip-title">Elevated (100–120 BPM)</div>
+                            <div class="tip-text">Can indicate stress, dehydration, caffeine, or early illness. Rest,
+                                hydrate, and recheck after 10 minutes of calm.</div>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-emoji">🚨</div>
+                            <div class="tip-title">High (&gt;120 BPM at rest)</div>
+                            <div class="tip-text">Persistent elevated heart rate may warrant medical attention. Track
+                                over 2–3 days and consult a doctor if it continues.</div>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-emoji">🌡️</div>
+                            <div class="tip-title">Cycle &amp; Heart Rate</div>
+                            <div class="tip-text">Your heart rate naturally rises 2–7 BPM after ovulation during the
+                                luteal phase. This is normal hormonal variation.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ────────── WELLNESS VIEW ────────── -->
+            <div class="view" id="view-wellness">
+                <div class="page-hd">
+                    <div>
+                        <div class="page-title">Wellness Guide</div>
+                        <div class="page-sub">Phase-specific care for your body and mind</div>
+                    </div>
+                </div>
+
+                <div class="phase-tip-bar" id="phase-tip-bar">
+                    <div class="ptb-icon">🌸</div>
+                    <div class="ptb-body">
+                        <div class="ptb-title" id="ptb-title">Set your cycle to get personalised tips</div>
+                        <div class="ptb-text" id="ptb-text">Once you log your last period, we'll show you phase-specific
+                            wellness advice here every day.</div>
+                    </div>
+                </div>
+
+                <div class="sec-label">Phase-by-Phase Care</div>
+                <div class="tip-grid">
+                    <div class="tip-card">
+                        <div class="tip-emoji">🩸</div>
+                        <div class="tip-title">Menstrual Phase (Days 1–5)</div>
+                        <div class="tip-text">Rest and restore. Reduce intense workouts — opt for yoga or walking. Eat
+                            iron-rich foods (spinach, lentils, red meat). Apply a warm compress for cramps. Stay
+                            hydrated and prioritise sleep.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">🌱</div>
+                        <div class="tip-title">Follicular Phase (Days 6–13)</div>
+                        <div class="tip-text">Energy rises — great time for cardio, strength training, and new projects.
+                            Oestrogen peaks here, boosting mood and focus. Eat light, protein-rich meals and fermented
+                            foods to support gut health.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">✨</div>
+                        <div class="tip-title">Ovulation (Day 14 approx.)</div>
+                        <div class="tip-text">Peak energy and libido. Your social and communication skills are naturally
+                            heightened. Great for presentations, dates, and high-intensity training. Stay hydrated —
+                            discharge increases slightly.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">🌙</div>
+                        <div class="tip-title">Luteal Phase (Days 15–28)</div>
+                        <div class="tip-text">Progesterone rises — you may feel more introspective. Reduce caffeine and
+                            sugar to ease PMS. Add magnesium-rich foods (dark chocolate, nuts). Gentle exercise and
+                            journaling help mood swings.</div>
+                    </div>
+                </div>
+
+                <div class="sec-label">Nutrition by Phase</div>
+                <div class="tip-grid">
+                    <div class="tip-card">
+                        <div class="tip-emoji">🥩</div>
+                        <div class="tip-title">Iron & Anti-Inflammatory</div>
+                        <div class="tip-text">During your period: leafy greens, red meat, legumes, vitamin C (helps iron
+                            absorption), ginger tea for cramps, turmeric.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">🥑</div>
+                        <div class="tip-title">Hormone-Supporting Foods</div>
+                        <div class="tip-text">Throughout the cycle: avocados, flaxseeds, salmon, walnuts, broccoli, and
+                            cruciferous vegetables support oestrogen balance.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">🍫</div>
+                        <div class="tip-title">Luteal Phase Cravings</div>
+                        <div class="tip-text">Dark chocolate (70%+) satisfies cravings while providing magnesium. Reduce
+                            salt to prevent bloating. Chamomile tea eases PMS anxiety.</div>
+                    </div>
+                </div>
+
+                <div class="sec-label">Mental Health</div>
+                <div class="tip-grid">
+                    <div class="tip-card">
+                        <div class="tip-emoji">🧘</div>
+                        <div class="tip-title">Managing PMS Mood</div>
+                        <div class="tip-text">Track your emotional patterns to anticipate low days. Regular sleep,
+                            limiting alcohol, journaling, and gentle movement significantly reduce PMS symptoms in most
+                            people.</div>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-emoji">🩺</div>
+                        <div class="tip-title">When to See a Doctor</div>
+                        <div class="tip-text">Seek medical advice if: periods are absent for 3+ months, pain is
+                            debilitating, bleeding is extremely heavy (&gt;7 days), or you experience severe mood
+                            disruption (possible PMDD).</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ────────── MEDICATIONS VIEW ────────── -->
+            <div class="view" id="view-meds">
+                <div class="page-hd">
+                    <div>
+                        <div class="page-title">Medications</div>
+                        <div class="page-sub">Your reminders and phase-appropriate options</div>
+                    </div>
+                </div>
+
+                <div class="sec-label">Recommended for Period Pain</div>
+                <div class="rec-meds">
+                    <div class="rec-med">
+                        <div class="rec-med-name">Ibuprofen (NSAIDs)</div>
+                        <div class="rec-med-use">Best for cramps and inflammation. Take 200–400mg every 4–6 hrs with
+                            food. Start at first sign of period. Reduces prostaglandins that cause cramping.</div>
+                        <div class="rec-med-warn">⚠ Avoid if you have stomach ulcers, kidney issues, or asthma. Max
+                            1200mg/day OTC.</div>
+                    </div>
+                    <div class="rec-med">
+                        <div class="rec-med-name">Paracetamol (Acetaminophen)</div>
+                        <div class="rec-med-use">For mild to moderate pain. 500–1000mg every 4–6 hrs. Safer on the
+                            stomach than NSAIDs. Can combine with ibuprofen (stagger doses).</div>
+                        <div class="rec-med-warn">⚠ Do not exceed 4000mg/day. Avoid with alcohol or if you have liver
+                            concerns.</div>
+                    </div>
+                    <div class="rec-med">
+                        <div class="rec-med-name">Buscopan (Hyoscine)</div>
+                        <div class="rec-med-use">Antispasmodic — relieves uterine cramps specifically. 10mg 3–4 times
+                            daily. Works best for spasmodic cramp pain rather than general period pain.</div>
+                        <div class="rec-med-warn">⚠ May cause dry mouth or blurred vision. Not suitable in pregnancy.
+                        </div>
+                    </div>
+                    <div class="rec-med">
+                        <div class="rec-med-name">Naproxen Sodium</div>
+                        <div class="rec-med-use">Longer-acting NSAID — lasts 8–12 hrs. 220mg every 8–12 hrs with food.
+                            Good for overnight relief without waking to redose.</div>
+                        <div class="rec-med-warn">⚠ Same cautions as ibuprofen. Do not combine with other NSAIDs.</div>
+                    </div>
+                    <div class="rec-med">
+                        <div class="rec-med-name">Mefenamic Acid</div>
+                        <div class="rec-med-use">Prescription NSAID specifically for period pain and heavy bleeding.
+                            500mg 3x daily. Often prescribed for dysmenorrhoea.</div>
+                        <div class="rec-med-warn">⚠ Prescription only in many countries. Take with food. Not for use
+                            longer than 3 days.</div>
+                    </div>
+                    <div class="rec-med">
+                        <div class="rec-med-name">Magnesium Supplement</div>
+                        <div class="rec-med-use">Natural muscle relaxant. 200–400mg daily in the luteal phase reduces
+                            cramp severity and PMS symptoms over time. Takes weeks to build up.</div>
+                        <div class="rec-med-warn">⚠ High doses may cause loose stools. Glycinate or malate forms are
+                            easiest on the stomach.</div>
+                    </div>
+                </div>
+
+                <div class="sep"></div>
+                <div class="sec-label">My Reminders</div>
+                <div class="med-list" id="med-list"></div>
+
+                <div class="add-med-form">
+                    <div class="card-title" style="margin-bottom:14px;">Add Medication Reminder</div>
+                    <div class="add-med-grid">
+                        <div class="field">
+                            <label>Medication name</label>
+                            <input type="text" id="med-name" placeholder="e.g. Ibuprofen 400mg">
+                        </div>
+                        <div class="field">
+                            <label>Dose / notes</label>
+                            <input type="text" id="med-dose" placeholder="e.g. 1 tablet with food">
+                        </div>
+                        <div class="field">
+                            <label>Reminder time</label>
+                            <input type="time" id="med-time">
+                        </div>
+                        <div class="field">
+                            <label>Frequency</label>
+                            <select id="med-freq">
+                                <option value="daily">Daily</option>
+                                <option value="period">During period only</option>
+                                <option value="luteal">Luteal phase only</option>
+                                <option value="asneeded">As needed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-rose" onclick="addMed()">+ Add Reminder</button>
+                </div>
+            </div>
+
+            <!-- ────────── NOTIFICATIONS VIEW ────────── -->
+            <div class="view" id="view-notifs">
+                <div class="page-hd">
+                    <div>
+                        <div class="page-title">Notifications</div>
+                        <div class="page-sub">Reminders and health alerts</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="clearAllNotifs()">Clear all</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Notification Settings</div>
+                    <div class="notif-sched-grid">
+                        <div class="field">
+                            <label>Period reminder (days before)</label>
+                            <input type="number" id="notif-period-days" value="2" min="1" max="7"
+                                onchange="saveNotifSettings()">
+                        </div>
+                        <div class="field">
+                            <label>Fertile window alert</label>
+                            <select id="notif-fertile" onchange="saveNotifSettings()">
+                                <option value="yes">On</option>
+                                <option value="no">Off</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Daily wellness tip time</label>
+                            <input type="time" id="notif-tip-time" value="08:00" onchange="saveNotifSettings()">
+                        </div>
+                        <div class="field">
+                            <label>Vitals reminder</label>
+                            <select id="notif-vitals" onchange="saveNotifSettings()">
+                                <option value="daily">Daily</option>
+                                <option value="off">Off</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-rose btn-sm" onclick="scheduleAllNotifs()">Apply &amp; Schedule</button>
+                </div>
+
+                <div class="sec-label">Recent Alerts</div>
+                <div class="notif-list" id="notif-list">
+                    <div style="text-align:center;padding:32px;color:var(--txt3);font-size:.85rem;">No notifications
+                        yet.</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="bn-inner">
+            <button class="bn-item active" id="bn-cycle" onclick="showView('cycle',null,'bn-cycle')">
+                <div class="bn-icon">🌸</div>Cycle
+            </button>
+            <button class="bn-item" id="bn-vitals" onclick="showView('vitals',null,'bn-vitals')">
+                <div class="bn-icon">❤️</div>Vitals
+            </button>
+            <button class="bn-item" id="bn-wellness" onclick="showView('wellness',null,'bn-wellness')">
+                <div class="bn-icon">✨</div>Wellness
+            </button>
+            <button class="bn-item" id="bn-meds" onclick="showView('meds',null,'bn-meds')">
+                <div class="bn-icon">💊</div>Meds
+            </button>
+            <button class="bn-item" id="bn-notifs" onclick="showView('notifs',null,'bn-notifs')">
+                <div class="bn-icon">🔔</div>Alerts
+            </button>
+        </div>
+    </div>
+
+    <script src="./luna.js">
+
+    </script>
+</body>
+
+</html>
